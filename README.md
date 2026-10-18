@@ -4,7 +4,7 @@
 
 ![The globe, live](docs/demo.gif)
 
-**[Live demo](https://viktorshishkoski.github.io/seismic-earth/)** · No engine, no framework: TypeScript, hand-written WGSL shaders, and about 400 lines of Node for the data service.
+**[Live demo](https://viktorshishkoski.github.io/seismic-earth/)** · No engine, no framework: ~6,000 lines of TypeScript and hand-written WGSL, a ~1,900-line Node service that merges two seismic networks, and 175 tests.
 
 ---
 
