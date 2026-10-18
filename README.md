@@ -1,10 +1,37 @@
 # Seismic Earth
 
-A real-time, GPU-rendered planet where earthquakes stream in from global seismic networks, sink to their true depth to reveal subducting tectonic plates, and send seismic waves across the surface.
+**A real-time globe of the world's earthquakes, rendered in raw WebGPU.** Quakes stream in from the global seismic networks, sink to their true depth to reveal the tectonic plates diving under continents, and send their P and S waves across the surface at the speed the travel-time tables say they travelled.
 
-Built with **raw WebGPU** (no engine), **WGSL** shaders and **TypeScript**.
+![The globe, live](docs/demo.gif)
 
-> **Status: Phase 5 — Showpiece.** A WebGPU globe of the world's earthquakes, a cutaway view that sinks each quake to its true depth to reveal subducting slabs, a relay service that merges EMSC's push stream with USGS, and a time machine that replays real sequences — Tōhoku, Illapel, Gorkha — with the P and S wavefronts spreading from each epicentre at the speed the travel-time tables say they did.
+**[Live demo](https://viktorshishkoski.github.io/seismic-earth/)** · No engine, no framework: TypeScript, hand-written WGSL shaders, and about 400 lines of Node for the data service.
+
+---
+
+## What it does
+
+**Shows every earthquake, live.** The browser polls the USGS feeds — the past hour, day, week, month, or a year of M4.5+ — and draws all of them in a single instanced draw call. Size is magnitude, colour is depth, recent events pulse, and anything new that arrives while you watch announces itself. A year of M4.5+ events traces the Ring of Fire without anyone having to draw it:
+
+![A year of M4.5+ earthquakes](docs/globe.png)
+
+**Cuts the planet open.** Press <kbd>C</kbd> and every quake drops from the surface to its real depth inside the Earth, down to 700 km. Fly along a trench and the scatter resolves into a sheet: the Wadati–Benioff zone, the slab of oceanic plate sinking into the mantle, with the colour ramp marking how deep each quake sat. This is the Tonga slab — the fastest and deepest on the planet — at ×2 depth exaggeration:
+
+![The Tonga slab in cutaway](docs/cutaway-tonga.png)
+
+**Propagates the actual waves.** Each quake radiates a P front and an S front, timed from the USGS travel-time tables rather than expanding at some made-up constant rate. P arrives first and pulls steadily ahead; S follows at a little over half the speed, carrying the shaking that does the damage. Sixty seconds after the M9.0 off Tōhoku, and ten minutes after:
+
+<p align="center">
+  <img src="docs/wavefronts-early.png" width="49%" alt="P and S fronts one minute after the main shock">
+  <img src="docs/wavefronts.png" width="49%" alt="The same fronts ten minutes later">
+</p>
+
+**Replays history.** The time machine plays back real sequences from the catalogue — Tōhoku 2011, Illapel and Gorkha 2015, Hualien 2018 — at up to 120× with a scrubber and a UTC clock. The replay drives the same pipeline as the live feed, so everything behaves exactly as it does on the real stream; only the clock is different. Tōhoku starts six minutes before the M9.0 and runs through the first hours of aftershocks.
+
+**Merges two seismic networks.** An optional relay service subscribes to EMSC's WebSocket push stream *and* polls USGS, deduplicates the two catalogues into one, and pushes changes to the browser in under a second instead of on the next 60-second poll. Click a quake both networks saw and the card shows each one's own solution and which was used.
+
+**Reads the catalogue as a population.** A statistics panel fits the Gutenberg–Richter law to whatever is on screen — the straight line on a log plot that says there are about ten times as many M5s as M6s — and draws the fit over the data so you can see where it breaks down:
+
+<p align="center"><img src="docs/statistics.png" width="320" alt="Gutenberg–Richter plot, depth histogram and summary figures"></p>
 
 ---
 
@@ -14,11 +41,10 @@ Requires **Node.js 22.12 or newer** and a WebGPU browser (current Chrome, Edge, 
 
 ```bash
 npm install
-npm run dev        # opens http://localhost:5173 — the globe, polling USGS directly
+npm run dev        # http://localhost:5173 — the globe, polling USGS directly
 ```
 
-That is the whole app. The relay is optional: run it and the globe switches to
-it automatically, for live pushes and both networks merged.
+That is the whole app; no server needed. The relay is optional, and the globe picks it up automatically if it's running:
 
 ```bash
 npm run dev:all    # the relay and the web app together
@@ -26,16 +52,14 @@ npm run dev:all    # the relay and the web app together
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Web app with instant reload (no server needed) |
+| `npm run dev` | Web app with instant reload |
 | `npm run server` | The relay on `http://localhost:8787` |
 | `npm run dev:all` | Both at once |
 | `npm test` | All 175 tests (Vitest) |
 | `npm run typecheck` | TypeScript check, no output files |
 | `npm run build` | Type-check, then build a static site into `dist/` |
-| `npm run preview` | Serve the built `dist/` locally |
 
-The relay needs no build step and no native modules: Node runs its TypeScript
-directly, and storage uses Node's own SQLite.
+The relay needs no build step and no native modules: Node runs its TypeScript directly, and storage uses Node's own SQLite.
 
 ### Controls
 
@@ -44,174 +68,23 @@ directly, and storage uses Node's own SQLite.
 | Drag (mouse, touch, pen) | Rotate the globe; release mid-drag to fling it |
 | Scroll / pinch | Zoom |
 | Hover a quake | Quick summary |
-| Click a quake | Details card (click empty space or press <kbd>Esc</kbd> to close) |
-| Click a row in "Strongest" | Fly there and open its details |
+| Click a quake | Details card (<kbd>Esc</kbd> closes it) |
 | Subduction zones (panel) | Fly beside a slab and look along its trench, in cutaway |
-| Time machine (panel) | Replay a real sequence; transport bar appears at the bottom |
+| Time machine (panel) | Replay a real sequence; the transport bar appears at the bottom |
 | <kbd>C</kbd> | Toggle cutaway |
 | <kbd>W</kbd> | Toggle the seismic wavefronts |
 | <kbd>R</kbd> | Back to the globe view |
 | <kbd>Space</kbd> | Toggle the idle auto-spin |
 
-Views are shareable: every setting lives in the URL, e.g. `?feed=year&view=cutaway&dx=2&sun=studio&plates=0`.
-A replay has one too — `?replay=tohoku` opens straight into it.
-Add `?relay=off` to ignore a running relay, or `?relay=http://host:8787` to use one elsewhere.
+Every setting lives in the URL, so any view is a link: `?feed=year&view=cutaway&dx=2&sun=studio`, or `?replay=tohoku` to open straight into a replay. `?relay=off` ignores a running relay.
 
-**Best first look:** **Time machine → Tōhoku**. The clock starts six minutes before
-the M9.0 of 11 March 2011; watch the blue P front pull away from the orange S front
-and cross the Pacific, then the aftershocks arrive in their hundreds.
-
-**Second look:** pick **1 y**, switch to **Cutaway**, then click **Tonga** under Subduction zones.
-
----
-
-## Deploy (GitHub Pages)
-
-The workflow runs the tests, builds, and publishes `main` to GitHub Pages. GitHub only runs workflows from `.github/workflows/`, so the first time, move it there:
-
-```powershell
-# Windows PowerShell, in the project folder
-New-Item -ItemType Directory -Force .github\workflows | Out-Null
-Move-Item deploy\github-pages.yml .github\workflows\deploy.yml
-```
-
-1. Create a GitHub repository and push this folder to its `main` branch.
-2. In the repository: **Settings → Pages → Source: GitHub Actions**.
-3. Every push to `main` now redeploys. The URL is shown on the workflow run and in Settings → Pages (usually `https://<user>.github.io/<repo>/`).
-
-The build uses relative paths (`base: './'` in `vite.config.ts`), so the same `dist/` also works on Cloudflare Pages, Netlify or any static host.
-
----
-
----
-
-## The relay
-
-`npm run dev` is the whole app: the browser polls USGS itself and needs no
-server. The relay adds what a browser cannot do on its own.
-
-| | Browser alone | With the relay |
-| --- | --- | --- |
-| Networks | USGS | USGS **+ EMSC** |
-| New quakes | next poll, up to 60 s | **pushed**, typically under a second |
-| Magnitude | whatever USGS reports | the better of the two scales |
-| History | the feed's own window | everything the relay has stored |
-
-```bash
-npm run server       # http://localhost:8787
-```
-
-Open the app and it finds the relay by itself; the status line changes from
-`Live · USGS` to `Live · USGS + EMSC`. Clicking a quake that both networks saw
-shows each one's own solution and which was used.
-
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `PORT` | `8787` | Port to listen on |
-| `DB_PATH` | `server/data/seismic.db` | Where history is kept |
-| `HISTORY_DAYS` | `30` | How far back to backfill at start-up |
-| `RETENTION_DAYS` | `90` | How long to keep events |
-| `BACKFILL_MIN_MAG` | `2.5` | Smallest magnitude worth backfilling (live events are never filtered) |
-| `EMSC` / `USGS` | `on` | Set either to `off` to run on one network |
-| `ALLOWED_ORIGINS` | localhost dev ports | Browser origins allowed to connect |
-
-### Endpoints
-
-```
-GET  /health          relay and per-network status
-GET  /events?from&to&minMag&limit
-GET  /events/:id      one event with every network report behind it
-WS   /live            subscribe to a window; snapshot, then changes as they happen
-```
-
-### Seeing a merge without waiting for an earthquake
-
-Two networks reporting the same quake is the thing worth demonstrating, and
-real ones do not arrive on cue. `server/test/fake-networks.mjs` stands in for
-both services so you can push events by hand — see the comment at the top of
-that file for the commands.
-
-### A caveat worth knowing
-
-The EMSC message format is built from their published documentation, not from a
-recorded live session — nothing here has been run against the real socket yet.
-The parser is defensive and the tests cover the documented shape, but the first
-thing to check when you run it for real is the `EMSC` line in `/health`: if
-`rejected` climbs while `received` stays at zero, the shape differs and
-`server/src/normalize.ts` is the one place to fix it.
-
----
-
-## Phase checklist
-
-**Phase 1 — Foundations** ✅
-- [x] WebGPU device and canvas setup with a clear message when WebGPU is missing
-- [x] Textured Earth with GPU-generated mipmaps, 4× MSAA, linear-light shading
-- [x] Quaternion orbit camera: free rotation over the poles, fling inertia, smooth zoom, north-up settling, idle spin
-
-**Phase 2 — MVP** ✅
-- [x] USGS GeoJSON feeds fetched straight from the browser: past hour, day, 7 days, 30 days (M2.5+)
-- [x] Defensive parsing: malformed features are skipped and counted, never fatal
-- [x] Polling every 60 s with snapshot diffing (new / revised / expired events), paused in background tabs
-- [x] Offline fallback: a bundled real USGS week (Feb 2018) when the live feed can't be reached
-- [x] One instanced draw call for every quake: size by magnitude, colour by depth, older events fade
-- [x] Recent quakes (< 1 h) pulse; new arrivals during the session raise a notification
-- [x] Horizon culling in the vertex shader (no z-fighting with the surface)
-- [x] CPU picking for hover tooltips and click-to-inspect, with a details card linking to USGS
-- [x] Quaternion-slerp fly-to; magnitude filter; depth and size legends; strongest-events list
-- [x] Phone layout (panel and card share a bottom sheet)
-- [x] GitHub Actions: test → build → deploy to Pages
-- [x] 62 unit tests (parser, store diffing, polling and fallback, packing, colour ramp, picking, camera, formatting)
-- [ ] **Gate:** public demo link works → push to GitHub and enable Pages
-
-**Phase 3 — Depth and science** ✅
-- [x] Cutaway view: every quake sinks to its true depth, with ×1 / ×2 / ×3 depth exaggeration, animated in and out
-- [x] Translucent crust (more opaque at the rim) and the outer core at 2,890 km for scale
-- [x] Quakes on the far side stay visible through the crust but dimmed; the core hides what's behind it
-- [x] Slab tours: Japan, Tonga, Andes and Marianas, seen edge-on along each trench
-- [x] Camera look-at target (orbit any point, not just the centre), kept above the surface
-- [x] Focus fade in slab views, so neighbouring slabs don't crowd the line of sight
-- [x] Plate boundaries from PB2002 (5,824 segments), one instanced draw, by type: convergent, divergent, transform
-- [x] Real sun from the UTC time, night side with city lights and a twilight band; Studio light still available
-- [x] Past-year M4.5+ window from the USGS FDSN event API (~7,000 events), refreshed every 10 min
-- [x] Offline sample per window: Feb 2018 week for short windows, the full 2015 M4.5+ year for 30 d / 1 y
-- [x] Picking matches the shader in every view: true-depth positions, core occlusion, nearest-first, focus
-- [x] Every setting in the URL; keyboard shortcuts keep working after clicking a control
-- [x] 94 unit tests (adds solar position, plate data, true-depth placement, core occlusion, slab views, URL settings)
-- [x] **Gate:** subduction slabs visible under Japan — at ×2 the Pacific slab is a clear sheet dipping west
-
-**Phase 4 — Live pipeline** ✅
-- [x] Relay service: EMSC's WebSocket stream + USGS polling, merged into one catalogue
-- [x] Deduplication by shared identifier first, then a time/distance/magnitude ellipsoid
-- [x] Preferred solution per event: moment magnitude over local scales, reviewed over automatic, more stations over fewer
-- [x] Never a blended hypocentre — position, depth and time always come from one network's solution
-- [x] SQLite history (Node's built-in, no native module), surviving restarts
-- [x] REST API (`/health`, `/events`, `/events/:id`) and a `/live` WebSocket with per-client windows
-- [x] Reconnect with exponential backoff and jitter; a silent socket is treated as dead; gaps refilled from FDSN
-- [x] Browser picks the relay when it is running and falls back to direct USGS when it is not
-- [x] Detail card shows every network that reported the quake, and which solution was used
-- [x] Status line names the live networks and says when one is reconnecting
-- [x] 141 tests, including the relay running end to end against stand-in networks
-- [x] **Gate:** a quake pushed by EMSC and then published by USGS appears once, with both solutions on its card
-
-**Phase 5 — Showpiece** ✅
-- [x] P and S wavefronts from the USGS travel-time tables, interpolated on the GPU — not a constant-speed ripple
-- [x] Compute shader scans every quake each frame and compacts the still-radiating ones into a short list with an atomic counter
-- [x] Each pixel asks when the wave reaches *it*, so both fronts curve correctly without inverting the table
-- [x] Time machine: Tōhoku 2011, Illapel 2015, Gorkha 2015 and Hualien 2018, replayed from the real catalogue
-- [x] Transport bar: play/pause, scrub, ×1 / ×15 / ×45 / ×120, and the data clock in UTC; `?replay=tohoku` in the URL
-- [x] A replay drives the same snapshot pipeline as the live feed, so markers, toasts, cards and fronts all behave identically
-- [x] Statistics panel: Gutenberg–Richter plot with the fitted law drawn over it, depth histogram, released energy, median depth
-- [x] Completeness by goodness of fit (Wiemer & Wyss), so a mixed-coverage window is flagged rather than given a meaningless slope
-- [x] 175 tests (adds travel times, replay clock and windowing, catalogue statistics)
-- [x] **Gate:** at 45×, the P front from the M9.0 reaches the far side of the Pacific in about twenty seconds of watching — and the readback confirms the compute pass found it
+**Best first look:** **Time machine → Tōhoku**, and watch the blue front pull away from the orange one and cross the Pacific.
 
 ---
 
 ## How it works
 
-The app runs either of two ways, and nothing downstream of the feed can tell
-which — both satisfy the same `QuakeFeed` interface.
+The app runs either of two ways, and nothing downstream of the feed can tell which — both satisfy the same `QuakeFeed` interface, and so does the replay.
 
 **Without the relay** (what the deployed demo does):
 
@@ -230,140 +103,111 @@ USGS feed ──poll───────┘      │
                         both solutions kept
 ```
 
+Everything on screen is drawn in one render pass, preceded by one compute pass:
+
+| Layer | What it draws |
+| --- | --- |
+| `CoreLayer` | The outer core at 2,890 km, for scale in cutaway |
+| `GlobeLayer` | The crust — opaque, or a translucent shell in cutaway |
+| `PlateLayer` | 5,824 plate-boundary segments, instanced, coloured by boundary type |
+| `WaveLayer` | A compute scan for radiating quakes, then one additive pass for the fronts |
+| `QuakeLayer` | Every earthquake, one instanced draw call |
+
+---
+
+## Worth a look
+
+The parts of this that took thought, if you're reading the source:
+
+**Waves are asked backwards** — [`src/render/shaders/waves.wgsl`](src/render/shaders/waves.wgsl). The obvious way to draw an expanding front is to work out where it is now and test every pixel against a moving circle, which means inverting the travel-time table every frame and gets the curvature wrong as soon as the front is large. Instead each pixel measures its own angular distance from the epicentre and looks up when the wave arrives *there*, lighting up when the elapsed time matches. One lookup per pixel, both fronts from it, and the curvature is right because the table already knows that a ray diving deeper travels faster.
+
+**The scan is a compute pass, not a CPU filter** — [`src/render/shaders/waveScan.wgsl`](src/render/shaders/waveScan.wgsl). Only a handful of quakes are radiating at any moment, but finding them means checking all of them. The data is already on the GPU for the markers, so a compute shader walks the same instance buffer and compacts the live ones into a 16-slot list with an atomic counter. The counter is allowed to overshoot; the renderer clamps what it reads, so a violent minute draws the first sixteen fronts rather than overflowing anything.
+
+**Two networks, one earthquake** — [`server/src/merge.ts`](server/src/merge.ts). USGS and EMSC detect the same quakes independently and never agree exactly: origin times differ by seconds, epicentres by tens of kilometres, magnitudes by tenths. A shared identifier settles a match outright; otherwise a report must fall inside an ellipsoid of time, distance *and* magnitude at once (45 s, 350 km, 1.5 units). Two reports from the *same* network are never merged — a network does not publish one quake twice, and that guard is what keeps a dense aftershock sequence intact. Checked against the real 2015 Nepal sequence, exactly one pair of distinct events falls inside the gates on the numbers alone, and both are USGS, so the guard catches it.
+
+**Which solution to believe** — position, depth and origin time always come from a single network's solution, because mixing a latitude from one agency with a depth from another invents a hypocentre nobody computed. Magnitude is chosen separately, preferring moment magnitude, which measures energy released and doesn't saturate for large quakes. The card shows both and marks which was used.
+
+**A replay is a feed** — [`src/data/ReplayFeed.ts`](src/data/ReplayFeed.ts). The time machine gets no rendering mode of its own. It satisfies the same interface as the live sources and emits the same snapshot events, so markers, toasts, cards, statistics and wavefronts all behave identically; the only difference is which clock `dataNow()` reads. Events are kept sorted by time, so what's on screen is a contiguous slice and advancing the clock moves two indices rather than rescanning.
+
+**Statistics that admit when they're meaningless** — [`src/data/statistics.ts`](src/data/statistics.ts). A worldwide "all magnitudes" window mixes a dense Californian network recording M1 with global coverage that misses anything under about M4.5. Fit one Gutenberg–Richter slope across that and you get b ≈ 0.3, which isn't physics — it's a map of who was listening. So completeness is chosen by goodness of fit rather than by the fullest bin, and when no threshold explains 90% of the distribution the panel says *mixed coverage — not one population* instead of printing a confident number.
+
+**Horizon culling instead of depth testing** — markers sit exactly on the surface, so depth-testing them against the globe would z-fight. The vertex shader hides any point past the horizon (`dot(p, eye/|eye|) > 1/|eye|`) and fades those near the limb. The CPU picker uses the same test, so you can't click a quake on the far side.
+
+**Assume the stream will break** — a WebSocket held open for days doesn't just drop, it also goes quiet while still looking open. The relay reconnects with exponential backoff and jitter, treats a long silence as failure, and refills what it missed from FDSN on reconnect, so an outage costs latency rather than data.
+
+**Looking across a slab, not down on it** — from above, a slab's quakes differ only in colour. Edge-on along the trench they line up into a dipping sheet. The camera orbits a look-at target that can sit inside the planet, and a focus fade drops quakes more than ~1,000 km away so other slabs don't crowd the line of sight, like the swath a seismologist projects onto a cross-section.
+
+A few more — the world frame, float precision for timestamps, the perceptual colour ramp, cutaway draw order, the solar position model — are documented inline where they apply.
+
+---
+
+## Tests
+
+```bash
+npm test     # 175 tests across 15 files
+```
+
+They cover the things that are easy to get quietly wrong: coordinate conversion and great-circle distance, the camera's quaternion maths, snapshot diffing, the GeoJSON parser against real malformed features, the depth ramp's perceptual monotonicity, solar position against the equinoxes and solstices, the travel-time tables against textbook figures (S/P ≈ 1.84 at 100°, P crossing a quarter of the planet in ~13 minutes), the replay clock and its windowing, and the Gutenberg–Richter estimator against synthetic catalogues with a known slope.
+
+The relay has its own end-to-end test that runs the whole service against stand-in USGS and EMSC servers: push an event from one, publish it from the other, and assert it appears once with both solutions attached.
+
+---
+
+## The relay
+
+`npm run dev` is the whole app. The relay adds what a browser can't do on its own.
+
+| | Browser alone | With the relay |
+| --- | --- | --- |
+| Networks | USGS | USGS **+ EMSC** |
+| New quakes | next poll, up to 60 s | **pushed**, typically under a second |
+| Magnitude | whatever USGS reports | the better of the two scales |
+| History | the feed's own window | everything the relay has stored |
+
+```
+GET  /health          relay and per-network status
+GET  /events?from&to&minMag&limit
+GET  /events/:id      one event with every network report behind it
+WS   /live            subscribe to a window; snapshot, then changes as they happen
+```
+
+Configurable by environment variable: `PORT` (8787), `DB_PATH`, `HISTORY_DAYS` (30), `RETENTION_DAYS` (90), `BACKFILL_MIN_MAG` (2.5), `EMSC` / `USGS` (`off` to run on one network), `ALLOWED_ORIGINS`.
+
+Two networks reporting the same quake is the thing worth demonstrating, and real ones don't arrive on cue — `server/test/fake-networks.mjs` stands in for both services so you can push events by hand.
+
+**One caveat worth knowing:** the EMSC message format is built from their published documentation, not from a recorded live session. The parser is defensive and the tests cover the documented shape, but the first thing to check when running it for real is the `EMSC` line in `/health`: if `rejected` climbs while `received` stays at zero, the shape differs, and `server/src/normalize.ts` is the one place to fix it.
+
+---
+
+## Project layout
+
 ```
 src/
-  main.ts                    Wires data, scene and UI together; frame loop
-  data/
-    quake.ts                 The app's own earthquake type (all sources normalise to it)
-    usgs.ts                  USGS feed URLs and a defensive GeoJSON parser
-    QuakeStore.ts            Current events + snapshot diffing (added / updated / removed)
-    LiveFeed.ts              Polling, timeouts, stale-response guard, offline fallback
-    RelayFeed.ts             WebSocket client for the relay: snapshot, then pushes
-    feed.ts                  The interface both feeds satisfy, and relay discovery
-    pack.ts                  Quake → 32-byte GPU instance
-    ReplayFeed.ts            Replays a slice of the catalogue as if it were live
-    replay.ts                The time machine's destinations
-    statistics.ts            Gutenberg–Richter, completeness, depth mix, released energy
-    plates.ts                PB2002 plate boundaries: parsing, styles, GPU segments
-  render/
-    SceneRenderer.ts         Render targets + the single render pass all layers draw into
-    FrameUniforms.ts         Camera/light/viewport/scene uniforms shared by every layer (bind group 0)
-    CoreLayer.ts             The outer core, shown in cutaway
-    GlobeLayer.ts            The crust: opaque, or a translucent shell in cutaway
-    PlateLayer.ts            Plate boundaries as instanced screen-space lines
-    QuakeLayer.ts            Instanced earthquake markers
-    WaveLayer.ts             P/S wavefronts: a compute scan, then one additive pass over the globe
-    markerStyle.ts           Depth colour ramp and magnitude size curve (one source of truth)
-    shaders/                 frame.wgsl (shared), core, globe, plates, quakes, waveScan (compute), waves
-  geo/
-    coords.ts                lat/lon/depth ↔ 3D, UVs, great-circle distance
-    sphere.ts                UV sphere mesh
-    sun.ts                   Subsolar point from the UTC time
-    travelTime.ts            USGS P and S travel-time tables, interpolation, GPU packing
-    picking.ts               True-depth placement, horizon and core tests, marker picking
-  camera/
-    OrbitCamera.ts           Quaternion camera with a look-at target, fly-to (DOM-free, unit-tested)
-    slabViews.ts             The subduction-zone tours
-    CameraController.ts      Pointer, wheel, pinch and keyboard input
-  gpu/                       Device setup, textures, mipmap generation
-  ui/                        Panel, overlays (card, tooltip, toast, status), picking input, URL settings, formatting
+  main.ts          Wires data, scene and UI together; the frame loop
+  data/            Feeds (live, relay, replay), the store, parsing, statistics
+  render/          One render pass; a layer per thing drawn; WGSL in shaders/
+  geo/             Coordinates, sphere mesh, solar position, travel times, picking
+  camera/          Quaternion orbit camera, slab tours, input handling
+  gpu/             Device setup, textures, mipmap generation
+  ui/              Panel, overlays, time machine, statistics, URL state
 server/
-  src/
-    index.ts                 Entry point: config, wiring, graceful shutdown
-    config.ts                Settings, all overridable by environment variable
-    types.ts                 SourceEvent (one network's report) and MergedEvent
-    normalize.ts             USGS and EMSC payloads → SourceEvent, defensively
-    merge.ts                 Matching and preferred-solution rules
-    store.ts                 SQLite schema and queries
-    relay.ts                 Reports in, merged events out; batching and pruning
-    hub.ts                   Connected browsers and their windows
-    api.ts                   HTTP routes and the /live WebSocket
-    sources/usgs.ts          Polling and FDSN backfill
-    sources/emsc.ts          WebSocket stream, reconnect, silence detection
-  test/                      Unit tests, an end-to-end test, and stand-in networks
-tests/                       Vitest unit tests + a real USGS fixture
-public/
-  textures/                  Earth day, water mask, night lights
-  data/                      Plate boundaries; offline samples (USGS week of Feb 2018, 2015 M4.5+, Tōhoku 9–18 Mar 2011)
+  src/             Sources, merge, SQLite store, relay, HTTP + WebSocket API
+  test/            Unit tests, an end-to-end test, and stand-in networks
+tests/             Vitest unit tests
+public/            Earth textures, plate boundaries, bundled catalogue samples
 ```
 
-## Design decisions
+Built as a static site (`base: './'`), so `dist/` works on GitHub Pages, Cloudflare Pages, Netlify or any static host. The included workflow runs the tests on every push and deploys `main` to Pages.
 
-**World frame.** Right-handed, Y up: +Y is the North Pole, +Z is 0° N 0° E, +X is 0° N 90° E. One unit = one Earth radius (6,371 km). Everything that places something on the planet goes through `src/geo/coords.ts`. GeoJSON stores `[longitude, latitude, depth]`; the parser is the one place that order is handled.
+How it got here, phase by phase, is in [`docs/development-log.md`](docs/development-log.md).
 
-**One draw call for all earthquakes.** Each quake is a 32-byte instance (position, magnitude, depth, time, flags). The vertex shader expands it into a camera-facing quad; the fragment shader carves out the disc, a dark outline (so markers read on bright desert and ice), the pulse ring and the hover/selection ring. Thousands of markers cost one draw call.
+---
 
-**Waves are asked backwards.** The obvious way to draw an expanding front is to work out where it is now and test every pixel against a moving circle — which means inverting the travel-time table every frame, and gets the curvature wrong as soon as the front is large enough to matter. Instead each pixel measures its own angular distance from the epicentre and looks up when the wave arrives *there*; it lights up when the elapsed time matches. One table lookup per pixel per front, both fronts from the same lookup, and the curvature is right because the table already knows that a ray diving deeper travels faster.
+## Data and credits
 
-**The scan is a compute pass, not a CPU filter.** Only a handful of quakes are radiating at any moment, but finding them means checking all of them — tens of thousands in the year window. The data is already on the GPU for the markers, so a compute shader walks the same instance buffer and compacts the live ones into a 16-slot list with an atomic counter. The counter is allowed to overshoot; the renderer clamps what it reads, so a violent minute draws the first sixteen fronts rather than overflowing anything.
-
-**A replay is a feed.** The time machine does not get a rendering mode of its own. `ReplayFeed` satisfies the same `QuakeFeed` interface as the live sources and emits the same snapshot events, so markers, toasts, the detail card, the statistics and the wavefronts all behave exactly as they do on the real stream — the only difference is which clock `dataNow()` reads. Because the events are sorted by time, what is on screen is a contiguous slice of the catalogue, and advancing the clock moves two indices rather than rescanning.
-
-**Statistics that admit when they are meaningless.** A worldwide "all magnitudes" window mixes a dense Californian network that records M1 with global coverage that misses anything under about M4.5. Fit one Gutenberg–Richter slope across that and you get b ≈ 0.3, which is not physics — it is a map of who was listening. So the completeness magnitude is chosen by goodness of fit rather than by the fullest bin, and when no threshold explains 90% of the distribution the panel says *mixed coverage — not one population* instead of printing a confident number.
-
-**Size in screen pixels.** Marker radius = 4 px × 1.5^(M − 4), clamped, with a gentle zoom factor. It's perceptual, not physical: energy grows ~32× per magnitude unit, so energy-true sizes would make an M7 a million times bigger than an M3 and hide every small quake.
-
-**Colour by depth.** Analogous warm hues whose perceptual lightness (OKLab L 0.91 → 0.54) falls steadily from shallow to deep, with stops at the standard depth classes (shallow < 70 km, intermediate 70–300, deep 300–700). The shader, the legend and the badges all read the same stops from `markerStyle.ts`.
-
-**Horizon culling instead of depth testing.** Markers sit exactly on the surface, so depth-testing them against the globe would flicker (z-fighting). The vertex shader instead hides any point whose angle from the camera is beyond the horizon (`dot(p, eye/|eye|) > 1/|eye|`) and fades markers near the limb. The CPU picker uses the same test, so you can't click a quake on the far side.
-
-**Float precision for time.** A float32 can't hold "milliseconds since 1970" precisely, so times are uploaded as seconds relative to the moment of upload.
-
-**Snapshot diffing.** Each USGS refresh is a complete snapshot of the window. Comparing ids and `updated` timestamps gives new, revised (agencies refine magnitude and location in the first hours) and expired events. That drives the notifications and keeps an open details card current.
-
-**Cutaway draw order.** The core is drawn first and writes depth. The crust follows as a translucent shell: it is depth-tested against the core but writes no depth, so the quakes drawn after it still show through. The markers switch to a depth-tested pipeline, so the core hides those behind it. One shared `quake_radius()` in `frame.wgsl` places quakes for every shader, and `picking.ts` mirrors it, so what you see is what you can click.
-
-**Looking across a slab, not down on it.** From above, a slab's quakes only differ in colour. Edge-on, looking along the trench, they line up into a dipping sheet (the Wadati–Benioff zone). The camera orbits a look-at target that can sit inside the planet; each tour puts it at the slab's middle depth and looks along the trench. A focus fade drops quakes more than ~1,000 km from the region, so other slabs along the line of sight don't crowd the view (like the swath a seismologist projects onto a cross-section).
-
-**Real sun.** The subsolar point comes from the Astronomical Almanac's low-precision solar formulas: declination from the sun's ecliptic longitude, and longitude from the right ascension minus Greenwich sidereal time. Tests check it against the equinox, both solstices and the equation of time. Because the world frame is Earth-fixed, the sun direction is simply the vector to that point.
-
-**Two networks, one earthquake.** USGS and EMSC detect the same quakes
-independently, and their solutions never agree exactly — origin times differ by
-seconds, epicentres by tens of kilometres, magnitudes by tenths because the
-networks use different scales. The relay matches a new report against what it
-knows in two passes: a shared identifier settles it outright (USGS publishes
-every id it knows for an event), and otherwise the report must fall inside an
-ellipsoid of time, distance *and* magnitude at once — 45 s, 350 km, 1.5
-magnitude units on the three axes. Two reports from the *same* network are
-never merged: a network does not publish one quake twice, and that guard is
-what keeps a dense aftershock sequence intact. Checked against the real 2015
-Nepal sequence, only one pair of genuinely distinct events falls inside the
-gates on the numbers alone — and both are USGS, so the guard catches it.
-
-**Which solution to believe.** Once two reports are one event, the relay does
-not average them. Position, depth and origin time come from a single network's
-solution, because mixing a latitude from one agency with a depth from another
-invents a hypocentre nobody computed; it prefers reviewed over automatic, then
-more stations, then the global catalogue. The magnitude is chosen separately —
-moment magnitude first, since it measures the energy released and does not
-saturate for large quakes, which is why USGS itself prefers it. The detail card
-shows both solutions and marks which one was used, so the choice is visible
-rather than hidden.
-
-**Assume the stream will break.** A WebSocket held open for days fails in ways
-a request does not: it drops, and it also goes quiet while still looking open.
-The relay reconnects with exponential backoff and jitter, treats a long silence
-as a failure, and refills whatever it missed from EMSC's FDSN service on
-reconnect — so an outage costs latency, not data. Tearing down a half-open
-socket needs its own care: `ws` emits one last error, and without a listener
-that takes the process down, which is exactly when the network is flapping.
-
-**Never an empty globe.** If the live feed can't be reached on the first load, a bundled real week of USGS data is shown and clearly labelled, and the live feed keeps being retried.
-
-## Roadmap
-
-1. **Foundations** — textured globe and orbit camera ✅
-2. **MVP** — live USGS feed, instanced markers, picking, deploy ✅ (deploy: your push)
-3. **Depth and science** — cutaway with true depth, slab tours, plate boundaries, real sun ✅
-4. **Live pipeline** — relay merging EMSC + USGS, WebSocket push, history in SQLite ✅
-5. **Showpiece** — compute-shader P/S waves, historical replays, statistics panel ✅
-6. **Polish** — atmosphere, performance write-up, demo GIF
-
-## Credits
-
-- Earthquake data: [USGS Earthquake Hazards Program](https://earthquake.usgs.gov/) real-time feeds and FDSN event service (public domain). Offline samples: a USGS "all week" snapshot from 1–7 Feb 2018, via [vega-datasets](https://github.com/vega/vega-datasets), and the USGS worldwide catalogs, via [helloworlddata/usgs-earthquakes](https://github.com/helloworlddata/usgs-earthquakes) — the 2015 M4.5+ year, and M4.0+ for 9–18 March 2011, which is the Tōhoku replay.
-- Seismic travel times: USGS Earthquake Hazards Program, ["Earthquake travel times"](https://www.usgs.gov/programs/earthquake-hazards/earthquake-travel-times) — P and S arrival times for a 33 km source, every 5° of epicentral distance.
-- Completeness estimate: Wiemer, S. & Wyss, M. (2000), *Minimum magnitude of completeness in earthquake catalogs*, Bulletin of the Seismological Society of America 90(4), 859–869. Slope estimate: Aki, K. (1965) and Utsu, T. (1965).
-- EMSC real-time service: [Euro-Mediterranean Seismological Centre](https://www.emsc-csem.org/), via the [SeismicPortal](https://www.seismicportal.eu/realtime.html) WebSocket and FDSN services.
-- Plate boundaries: Bird, P. (2003), *An updated digital model of plate boundaries*, Geochemistry, Geophysics, Geosystems 4(3), 1027 — PB2002, via [fraxen/tectonicplates](https://github.com/fraxen/tectonicplates).
-- Earth imagery: NASA Visible Earth / Blue Marble and Black Marble (public domain), via the [three-globe](https://github.com/vasturiano/three-globe) example assets.
+- **Earthquakes:** [USGS Earthquake Hazards Program](https://earthquake.usgs.gov/) real-time feeds and FDSN event service (public domain). Bundled offline samples: a USGS "all week" snapshot from 1–7 Feb 2018, via [vega-datasets](https://github.com/vega/vega-datasets); the 2015 M4.5+ worldwide year and M4.0+ for 9–18 March 2011 (the Tōhoku replay), via [helloworlddata/usgs-earthquakes](https://github.com/helloworlddata/usgs-earthquakes).
+- **Travel times:** USGS, ["Earthquake travel times"](https://www.usgs.gov/programs/earthquake-hazards/earthquake-travel-times) — P and S arrivals for a 33 km source, every 5° of epicentral distance.
+- **EMSC real-time service:** [Euro-Mediterranean Seismological Centre](https://www.emsc-csem.org/), via the [SeismicPortal](https://www.seismicportal.eu/realtime.html) WebSocket and FDSN services.
+- **Plate boundaries:** Bird, P. (2003), *An updated digital model of plate boundaries*, G³ 4(3), 1027 — PB2002, via [fraxen/tectonicplates](https://github.com/fraxen/tectonicplates).
+- **Earth imagery:** NASA Visible Earth — Blue Marble and Black Marble (public domain).
+- **Statistics:** completeness by goodness of fit, Wiemer & Wyss (2000), *BSSA* 90(4), 859–869; slope by maximum likelihood, Aki (1965) and Utsu (1965).
