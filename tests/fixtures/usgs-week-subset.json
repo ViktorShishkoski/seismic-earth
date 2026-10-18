@@ -1,0 +1,325 @@
+{
+ "type": "FeatureCollection",
+ "metadata": {
+  "generated": 1517968154000,
+  "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson",
+  "title": "USGS All Earthquakes, Past Week",
+  "status": 200,
+  "api": "1.5.8",
+  "count": 1707
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "id": "us1000chhc",
+   "properties": {
+    "mag": 6.4,
+    "place": "22km NNE of Hualian, Taiwan",
+    "time": 1517932242400,
+    "updated": 1517967111797,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us1000chhc",
+    "felt": 261,
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 800,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 6.4 - 22km NNE of Hualian, Taiwan",
+    "code": "1000chhc"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     121.653,
+     24.1737,
+     10.64
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "us1000cfn6",
+   "properties": {
+    "mag": 6.1,
+    "place": "21km NNE of Hualian, Taiwan",
+    "time": 1517752602150,
+    "updated": 1517937727432,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us1000cfn6",
+    "felt": 294,
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 731,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 6.1 - 21km NNE of Hualian, Taiwan",
+    "code": "1000cfn6"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     121.6777,
+     24.1595,
+     11.97
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "us2000crmu",
+   "properties": {
+    "mag": 6.1,
+    "place": "35km S of Jarm, Afghanistan",
+    "time": 1517382420230,
+    "updated": 1517909637628,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us2000crmu",
+    "felt": 438,
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 853,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 6.1 - 35km S of Jarm, Afghanistan",
+    "code": "2000crmu"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     70.8155,
+     36.5432,
+     191.19
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "us1000ce9r",
+   "properties": {
+    "mag": 6,
+    "place": "265km NE of Scott Island Bank, Antarctica",
+    "time": 1517571473320,
+    "updated": 1517853474040,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us1000ce9r",
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 554,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 6.0 - 265km NE of Scott Island Bank, Antarctica",
+    "code": "1000ce9r"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -175.635,
+     -65.8111,
+     10
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "us1000cdn0",
+   "properties": {
+    "mag": 6,
+    "place": "272km SSE of Sigave, Wallis and Futuna",
+    "time": 1517483150540,
+    "updated": 1517527981919,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us1000cdn0",
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 554,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 6.0 - 272km SSE of Sigave, Wallis and Futuna",
+    "code": "1000cdn0"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -177.3954,
+     -16.645,
+     10
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "us2000crtj",
+   "properties": {
+    "mag": 5.7,
+    "place": "55km SE of Pedasi, Panama",
+    "time": 1517416626080,
+    "updated": 1517430245040,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us2000crtj",
+    "felt": 30,
+    "alert": "green",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 511,
+    "magType": "mww",
+    "type": "earthquake",
+    "title": "M 5.7 - 55km SE of Pedasi, Panama",
+    "code": "2000crtj"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -79.6307,
+     7.2307,
+     10
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "nn00620911",
+   "properties": {
+    "mag": 2.1,
+    "place": "24km WNW of Battle Mountain, Nevada",
+    "time": 1517955194906,
+    "updated": 1517956073863,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/nn00620911",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 68,
+    "magType": "ml",
+    "type": "explosion",
+    "title": "M 2.1 Explosion - 24km WNW of Battle Mountain, Nevada",
+    "code": "00620911"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.2048,
+     40.7226,
+     1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "nn00620907",
+   "properties": {
+    "mag": 2,
+    "place": "34km NW of Carlin, Nevada",
+    "time": 1517954525430,
+    "updated": 1517956270289,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/nn00620907",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 62,
+    "magType": "ml",
+    "type": "explosion",
+    "title": "M 2.0 Explosion - 34km NW of Carlin, Nevada",
+    "code": "00620907"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -116.3719,
+     40.9433,
+     0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "ci38101128",
+   "properties": {
+    "mag": 0.63,
+    "place": "5km ESE of Nuevo, CA",
+    "time": 1517946650300,
+    "updated": 1517946885683,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/ci38101128",
+    "status": "automatic",
+    "tsunami": 0,
+    "sig": 6,
+    "magType": "ml",
+    "type": "earthquake",
+    "title": "M 0.6 - 5km ESE of Nuevo, CA",
+    "code": "38101128"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.0977,
+     33.7835,
+     -0.21
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "mb80280489",
+   "properties": {
+    "mag": -0.07,
+    "place": "15km N of Dillon, Montana",
+    "time": 1517930690870,
+    "updated": 1517934554140,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/mb80280489",
+    "status": "reviewed",
+    "tsunami": 0,
+    "sig": 0,
+    "magType": "md",
+    "type": "earthquake",
+    "title": "M -0.1 - 15km N of Dillon, Montana",
+    "code": "80280489"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -112.6238,
+     45.3583,
+     5.99
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "broken-no-mag",
+   "properties": {
+    "mag": null,
+    "time": 1517900000000,
+    "place": "nowhere"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     10,
+     10,
+     5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "broken-no-geom",
+   "properties": {
+    "mag": 3.1,
+    "time": 1517900000000
+   },
+   "geometry": null
+  },
+  {
+   "type": "Feature",
+   "id": "broken-lat",
+   "properties": {
+    "mag": 3.1,
+    "time": 1517900000000
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     10,
+     95,
+     5
+    ]
+   }
+  }
+ ]
+}

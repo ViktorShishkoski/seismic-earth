@@ -1,0 +1,32 @@
+{
+  "name": "seismic-earth",
+  "version": "0.1.0",
+  "description": "A real-time WebGPU globe of the world's earthquakes, with a relay that merges the EMSC and USGS networks.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "server": "node --no-warnings=ExperimentalWarning server/src/index.ts",
+    "dev:all": "node scripts/dev-all.mjs"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.4",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.74",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5",
+    "@types/ws": "^8.18.1",
+    "@types/node": "^22.18.12"
+  }
+}

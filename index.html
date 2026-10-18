@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Seismic Earth: a real-time WebGPU globe of the world's earthquakes." />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>Seismic Earth</title>
+  </head>
+  <body>
+    <canvas id="globe" aria-label="Interactive 3D globe of recent earthquakes"></canvas>
+
+    <header class="hud hud-title">
+      <h1>Seismic Earth</h1>
+      <p class="feed-status" id="feed-status" aria-live="polite">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Connecting to USGS…</span>
+      </p>
+    </header>
+
+    <aside class="panel" id="panel" aria-label="Earthquake controls">
+      <details open id="panel-details">
+        <summary>
+          <span class="count" id="quake-count">–</span>
+          <span class="count-label" id="count-label">earthquakes</span>
+        </summary>
+
+        <div class="panel-body">
+          <fieldset class="control">
+            <legend>Time window</legend>
+            <div class="segmented cols-5" id="feed-buttons" role="radiogroup" aria-label="Time window">
+              <button type="button" role="radio" data-feed="hour">1 h</button>
+              <button type="button" role="radio" data-feed="day">24 h</button>
+              <button type="button" role="radio" data-feed="week">7 d</button>
+              <button type="button" role="radio" data-feed="month">30 d</button>
+              <button type="button" role="radio" data-feed="year">1 y</button>
+            </div>
+            <p class="hint" id="feed-hint"></p>
+          </fieldset>
+
+          <div class="control">
+            <label for="min-mag" class="control-label">
+              Minimum magnitude <output id="min-mag-value" for="min-mag">all</output>
+            </label>
+            <input type="range" id="min-mag" min="-1" max="7" step="0.5" value="-1" />
+          </div>
+
+          <fieldset class="control">
+            <legend>View</legend>
+            <div class="view-row">
+              <div class="segmented cols-2" id="view-buttons" role="radiogroup" aria-label="View">
+                <button type="button" role="radio" data-view="surface">Surface</button>
+                <button type="button" role="radio" data-view="cutaway">Cutaway</button>
+              </div>
+              <div class="segmented cols-3 compact" id="depth-scale-buttons" role="radiogroup" aria-label="Depth exaggeration">
+                <button type="button" role="radio" data-scale="1" title="True scale">×1</button>
+                <button type="button" role="radio" data-scale="2" title="Depth exaggerated 2×">×2</button>
+                <button type="button" role="radio" data-scale="3" title="Depth exaggerated 3×">×3</button>
+              </div>
+            </div>
+            <p class="hint">Cutaway sinks each quake to its true depth inside the planet. ×2 and ×3 stretch depth to make slabs easier to see.</p>
+          </fieldset>
+
+          <fieldset class="control">
+            <legend>Subduction zones</legend>
+            <div class="slab-grid" id="slab-buttons"></div>
+            <p class="hint">Fly beside a sinking plate and look along its trench.</p>
+          </fieldset>
+
+          <fieldset class="control">
+            <legend>Time machine</legend>
+            <div class="slab-grid" id="replay-buttons"></div>
+            <p class="hint">Replay a real sequence from the USGS catalogue, with the P and S wavefronts spreading as they did.</p>
+          </fieldset>
+
+          <fieldset class="control">
+            <legend>Light</legend>
+            <div class="segmented cols-2" id="sun-buttons" role="radiogroup" aria-label="Lighting">
+              <button type="button" role="radio" data-sun="real">Real sun</button>
+              <button type="button" role="radio" data-sun="studio">Studio</button>
+            </div>
+            <p class="hint" id="sun-hint"></p>
+          </fieldset>
+
+          <div class="control">
+            <span class="control-label">Depth (km)</span>
+            <div class="depth-legend" id="depth-legend"></div>
+          </div>
+
+          <div class="control">
+            <span class="control-label">Magnitude</span>
+            <div class="size-legend" id="size-legend"></div>
+          </div>
+
+          <div class="control">
+            <label class="control-label toggle">
+              Seismic wavefronts
+              <input type="checkbox" id="waves-toggle" checked />
+            </label>
+            <p class="hint">P (blue) then S (orange) fronts, timed from the USGS travel-time tables. Thirteen minutes to cross a quarter of the planet — best watched in a replay.</p>
+          </div>
+
+          <div class="control">
+            <span class="control-label">This window as a population</span>
+            <div class="stats-panel" id="stats-panel"></div>
+          </div>
+
+          <div class="control">
+            <label class="control-label toggle">
+              Plate boundaries
+              <input type="checkbox" id="plates-toggle" checked />
+            </label>
+            <div id="plate-legend-row">
+              <ul class="plate-legend" id="plate-legend"></ul>
+              <p class="hint">Peter Bird's PB2002 plate model</p>
+            </div>
+          </div>
+
+          <div class="control">
+            <span class="control-label">Strongest in this window</span>
+            <ol class="quake-list" id="strongest"></ol>
+          </div>
+        </div>
+      </details>
+    </aside>
+
+    <article class="card" id="card" hidden aria-live="polite"></article>
+
+    <section class="replay-bar" id="replay-bar" hidden aria-label="Replay controls">
+      <div class="replay-head">
+        <strong id="replay-title"></strong>
+        <button type="button" class="link" id="replay-live">Back to live</button>
+      </div>
+      <div class="replay-transport">
+        <button type="button" class="replay-play" id="replay-play" aria-label="Pause the replay">❙❙</button>
+        <input type="range" id="replay-seek" min="0" max="1000" value="0" step="1" aria-label="Position in the replay" />
+        <span class="replay-clock" id="replay-clock">—</span>
+        <div class="segmented cols-4 compact" id="replay-speeds" role="radiogroup" aria-label="Replay speed"></div>
+      </div>
+      <p class="replay-blurb" id="replay-blurb"></p>
+    </section>
+
+    <div class="tooltip" id="tooltip" hidden></div>
+    <div class="toast" id="toast" hidden role="status"></div>
+
+    <aside class="hud hud-stats" id="stats" aria-live="off">
+      <span><span class="label">FPS</span> <span id="stat-fps">–</span></span>
+      <span><span class="label">Frame</span> <span id="stat-ms">–</span></span>
+      <span><span class="label">GPU</span> <span id="stat-gpu">–</span></span>
+    </aside>
+
+    <footer class="hud hud-help">
+      Drag to rotate · Scroll or pinch to zoom · Click a quake for details · <kbd>C</kbd> cutaway · <kbd>W</kbd> wavefronts · <kbd>R</kbd> reset · <kbd>Space</kbd> spin
+    </footer>
+
+    <div class="fallback" id="fallback" hidden>
+      <div class="fallback-card">
+        <h2>WebGPU isn't available</h2>
+        <p id="fallback-reason"></p>
+        <p>Try the latest Chrome, Edge, Firefox or Safari, and make sure hardware acceleration is on.</p>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
